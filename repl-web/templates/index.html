@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAU-BENCH Web REPL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TAU-BENCH Interactive REPL</h1>
+            <div class="header-controls">
+                <span id="session-info" class="session-info"></span>
+                <button id="new-session-btn" class="btn btn-secondary">New Session</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Session Setup Panel -->
+            <div id="setup-panel" class="panel">
+                <h2>Create New Session</h2>
+                <div class="form-group">
+                    <label for="env-type">Environment Type:</label>
+                    <select id="env-type" class="form-control">
+                        <option value="retail">Retail</option>
+                        <option value="airline">Airline</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="task-split">Task Split:</label>
+                    <select id="task-split" class="form-control">
+                        <option value="test">Test</option>
+                        <option value="train">Train (Retail only)</option>
+                        <option value="dev">Dev (Retail only)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="task-index">Task Index (optional):</label>
+                    <input type="number" id="task-index" class="form-control" min="0" placeholder="Random if empty">
+                </div>
+                <button id="create-session-btn" class="btn btn-primary">Create Session</button>
+            </div>
+
+            <!-- Main REPL Interface -->
+            <div id="repl-panel" class="panel hidden">
+                <div class="repl-header">
+                    <div class="task-info" id="task-info"></div>
+                    <div class="control-buttons">
+                        <button id="reset-btn" class="btn btn-warning">Reset Environment</button>
+                        <button id="tools-btn" class="btn btn-info">Show Tools</button>
+                        <button id="history-btn" class="btn btn-info">Show History</button>
+                    </div>
+                </div>
+
+                <!-- Console Output -->
+                <div class="console" id="console">
+                    <div class="console-output" id="console-output"></div>
+                </div>
+
+                <!-- Action Input -->
+                <div class="action-input">
+                    <div class="input-type-selector">
+                        <label>
+                            <input type="radio" name="input-type" value="respond" checked>
+                            Respond to User
+                        </label>
+                        <label>
+                            <input type="radio" name="input-type" value="tool">
+                            Execute Tool
+                        </label>
+                    </div>
+
+                    <!-- Respond Input -->
+                    <div id="respond-input" class="input-section">
+                        <textarea id="response-text" class="form-control" 
+                                  placeholder="Type your response to the user..." rows="3"></textarea>
+                        <button id="send-response-btn" class="btn btn-primary">Send Response</button>
+                    </div>
+
+                    <!-- Tool Input -->
+                    <div id="tool-input" class="input-section hidden">
+                        <div class="form-group">
+                            <label for="tool-select">Select Tool:</label>
+                            <select id="tool-select" class="form-control">
+                                <option value="">-- Select a tool --</option>
+                            </select>
+                        </div>
+                        <div id="tool-params" class="tool-params"></div>
+                        <button id="execute-tool-btn" class="btn btn-primary">Execute Tool</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tools Panel (Modal) -->
+            <div id="tools-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Available Tools</h2>
+                        <button class="close-btn" onclick="closeToolsModal()">&times;</button>
+                    </div>
+                    <div class="modal-body" id="tools-list"></div>
+                </div>
+            </div>
+
+            <!-- History Panel (Modal) -->
+            <div id="history-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Action History</h2>
+                        <button class="close-btn" onclick="closeHistoryModal()">&times;</button>
+                    </div>
+                    <div class="modal-body" id="history-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
