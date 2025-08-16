@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialogue Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 2em;
+        }
+        
+        .task-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .task-info h3 {
+            color: #555;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .instruction {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        
+        .role {
+            font-weight: bold;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+        
+        .role.system {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .role.user {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .role.assistant {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .message-content {
+            padding: 15px;
+            border-radius: 10px;
+            background: #f9f9f9;
+            border-left: 3px solid transparent;
+            position: relative;
+        }
+        
+        .message-content.system {
+            border-left-color: #999;
+            background: #f5f5f5;
+        }
+        
+        .message-content.user {
+            border-left-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        
+        .message-content.assistant {
+            border-left-color: #2196F3;
+            background: #e3f2fd;
+        }
+        
+        .thought-action {
+            background: #fff3e0;
+            border: 1px solid #ffb74d;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .thought {
+            color: #e65100;
+            margin-bottom: 8px;
+        }
+        
+        .action {
+            color: #1565c0;
+        }
+        
+        .api-output {
+            background: #f3e5f5;
+            border: 1px solid #ba68c8;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .collapse-btn {
+            background: #666;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-left: auto;
+        }
+        
+        .collapse-btn:hover {
+            background: #555;
+        }
+        
+        .collapsed .message-content {
+            max-height: 100px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .collapsed .message-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(transparent, #f9f9f9);
+        }
+        
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .file-input {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        input[type="file"] {
+            padding: 10px;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Dialogue Viewer</h1>
+            <div class="file-input">
+                <label for="fileSelect">Select dialogue: </label>
+                <select id="fileSelect" style="padding: 10px; font-size: 1em; margin-right: 20px;">
+                    <option value="">-- Select a dialogue file --</option>
+                    <option value="/Users/liujiahao/src/tau-bench/results/react-gpt-4o-0.0_range_0--1_user-gpt-4o-llm_0814171009.json">React GPT-4o (0814171009)</option>
+                    <option value="/Users/liujiahao/src/tau-bench/results/tool-calling-gpt-4o-0.0_range_0--1_user-gpt-4o-llm_0814170214.json">Tool Calling GPT-4o (0814170214)</option>
+                </select>
+                <span style="color: #666;">OR</span>
+                <label for="fileInput" style="margin-left: 20px;">Upload custom file: </label>
+                <input type="file" id="fileInput" accept=".json">
+            </div>
+            <div id="taskInfo" class="task-info" style="display: none;">
+                <h3>Task Information</h3>
+                <div class="instruction" id="instruction"></div>
+                <div class="stats" id="stats"></div>
+            </div>
+        </div>
+        
+        <div class="chat-container" id="chatContainer">
+            <p style="text-align: center; color: #999;">Please load a JSON file to view the dialogue</p>
+        </div>
+    </div>
+    
+    <script>
+        let dialogueData = null;
+        
+        // Load available dialogues on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadDialogueList();
+        });
+        
+        function loadDialogueList() {
+            // Try to fetch from server API
+            fetch('/api/list-dialogues')
+                .then(response => response.json())
+                .then(dialogues => {
+                    const select = document.getElementById('fileSelect');
+                    select.innerHTML = '<option value="">-- Select a dialogue file --</option>';
+                    
+                    dialogues.forEach(dialogue => {
+                        const option = document.createElement('option');
+                        option.value = dialogue.path;
+                        option.textContent = dialogue.name;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.log('Server API not available, using static list');
+                    // Keep the static options already in HTML as fallback
+                });
+        }
+        
+        // Handle dropdown selection
+        document.getElementById('fileSelect').addEventListener('change', function(e) {
+            const filePath = e.target.value;
+            if (filePath) {
+                loadJsonFile(filePath);
+            }
+        });
+        
+        // Handle file upload
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        displayDialogue(data);
+                        // Clear dropdown selection when file is uploaded
+                        document.getElementById('fileSelect').value = '';
+                    } catch (error) {
+                        alert('Error parsing JSON file: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+        
+        function loadJsonFile(filePath) {
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = '<p style="text-align: center; color: #999;">Loading dialogue...</p>';
+            
+            // Try to fetch from server API
+            fetch(`/api/load-dialogue?path=${encodeURIComponent(filePath)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayDialogue(data);
+                })
+                .catch(error => {
+                    chatContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <p style="color: #666; font-size: 1.2em;">
+                                To view dialogues from the dropdown, please run the server:<br>
+                            </p>
+                            <div style="margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 10px;">
+                                <p style="font-family: monospace; color: #333;">
+                                    cd /Users/liujiahao/src/tau-bench/repl-web<br>
+                                    python3 dialogue_server.py<br><br>
+                                    Then visit: http://localhost:8080
+                                </p>
+                            </div>
+                            <p style="color: #666; margin-top: 20px;">
+                                Or use the file upload option to browse and select a JSON file.
+                            </p>
+                        </div>
+                    `;
+                });
+        }
+        
+        function displayDialogue(data) {
+            // Handle both array and single object formats
+            dialogueData = Array.isArray(data) ? data[0] : data;
+            
+            // Display task info
+            const taskInfo = document.getElementById('taskInfo');
+            const instruction = document.getElementById('instruction');
+            const stats = document.getElementById('stats');
+            
+            taskInfo.style.display = 'block';
+            instruction.innerHTML = `<strong>Instruction:</strong> ${dialogueData.info.task.instruction}`;
+            
+            // Display stats
+            stats.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Task ID</div>
+                    <div class="stat-value">${dialogueData.task_id}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">User ID</div>
+                    <div class="stat-value">${dialogueData.info.task.user_id}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Reward</div>
+                    <div class="stat-value">${dialogueData.reward}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Messages</div>
+                    <div class="stat-value">${dialogueData.traj.length}</div>
+                </div>
+            `;
+            
+            // Display dialogue
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = '';
+            
+            dialogueData.traj.forEach((message, index) => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                
+                // Parse content for thought/action if assistant
+                let contentHtml = '';
+                if (message.role === 'assistant' && message.content) {
+                    const thoughtMatch = message.content.match(/Thought:\n(.+?)(?:\nAction:|$)/s);
+                    const actionMatch = message.content.match(/Action:\n(.+?)$/s);
+                    
+                    if (thoughtMatch || actionMatch) {
+                        contentHtml = '<div class="thought-action">';
+                        if (thoughtMatch) {
+                            contentHtml += `<div class="thought"><strong>Thought:</strong> ${escapeHtml(thoughtMatch[1])}</div>`;
+                        }
+                        if (actionMatch) {
+                            try {
+                                const actionJson = JSON.parse(actionMatch[1]);
+                                contentHtml += `<div class="action"><strong>Action:</strong> ${actionJson.name}`;
+                                if (actionJson.arguments) {
+                                    contentHtml += `<br><strong>Arguments:</strong> <pre>${JSON.stringify(actionJson.arguments, null, 2)}</pre>`;
+                                }
+                                contentHtml += '</div>';
+                            } catch {
+                                contentHtml += `<div class="action"><strong>Action:</strong> <pre>${escapeHtml(actionMatch[1])}</pre></div>`;
+                            }
+                        }
+                        contentHtml += '</div>';
+                    } else if (message.content.includes('"name": "respond"')) {
+                        // Extract response content
+                        const respondMatch = message.content.match(/"content":\s*"(.+?)"/);
+                        if (respondMatch) {
+                            contentHtml = `<div class="message-content ${message.role}">${escapeHtml(respondMatch[1])}</div>`;
+                        } else {
+                            contentHtml = `<div class="message-content ${message.role}"><pre>${escapeHtml(message.content)}</pre></div>`;
+                        }
+                    } else {
+                        contentHtml = `<div class="message-content ${message.role}">${escapeHtml(message.content)}</div>`;
+                    }
+                } else if (message.role === 'user' && message.content.startsWith('API output:')) {
+                    // Format API output
+                    const apiContent = message.content.substring('API output: '.length);
+                    try {
+                        const apiJson = JSON.parse(apiContent);
+                        contentHtml = `<div class="api-output"><strong>API Output:</strong><pre>${JSON.stringify(apiJson, null, 2)}</pre></div>`;
+                    } catch {
+                        contentHtml = `<div class="api-output"><strong>API Output:</strong> ${escapeHtml(apiContent)}</div>`;
+                    }
+                } else {
+                    contentHtml = `<div class="message-content ${message.role}">${escapeHtml(message.content || '')}</div>`;
+                }
+                
+                const isLongMessage = message.content && message.content.length > 500;
+                
+                messageDiv.innerHTML = `
+                    <div class="message-header">
+                        <span class="role ${message.role}">${message.role}</span>
+                        ${isLongMessage ? '<button class="collapse-btn" onclick="toggleCollapse(this)">Show Less</button>' : ''}
+                    </div>
+                    ${contentHtml}
+                `;
+                
+                if (isLongMessage) {
+                    messageDiv.classList.add('collapsed');
+                }
+                
+                chatContainer.appendChild(messageDiv);
+            });
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function toggleCollapse(button) {
+            const message = button.closest('.message');
+            message.classList.toggle('collapsed');
+            button.textContent = message.classList.contains('collapsed') ? 'Show More' : 'Show Less';
+        }
+    </script>
+</body>
+</html>
